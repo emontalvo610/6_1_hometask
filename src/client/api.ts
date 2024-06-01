@@ -10,7 +10,7 @@ export const getFiles = async (user: string) => {
   return res.data;
 };
 
-export const upalodMultipleFiles = async (
+export const uploadMultipleFiles = async (
   uploadFiles: FileList,
   username: string,
   parent: string
@@ -30,7 +30,7 @@ export const upalodMultipleFiles = async (
   return res.data;
 };
 
-export const upalodFolder = async (
+export const uploadFolders = async (
   uploadFiles: FileList,
   username: string,
   parent: string
@@ -50,5 +50,10 @@ export const upalodFolder = async (
       "Content-Type": "multipart/form-data",
     },
   });
+  return res.data;
+};
+
+export const fetchFileContent = async (id?: string) => {
+  const res = await axios.get(`/api/file/${id}`);
   return res.data;
 };

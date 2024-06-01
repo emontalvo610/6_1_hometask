@@ -137,3 +137,9 @@ app.post(
     }
   }
 );
+
+app.get("/api/file/:id", async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const file = await FileModel.findById(id);
+  res.json(file);
+});
