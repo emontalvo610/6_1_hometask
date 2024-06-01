@@ -1,6 +1,8 @@
 import { useState, useEffect, ChangeEvent } from "react";
 
-import { getFiles, upalodMultipleFiles, upalodFolder } from "../api";
+import { getFiles, uploadMultipleFiles, uploadFolders } from "../api";
+
+import { useNavigate } from "react-router-dom";
 
 interface FileItem {
   filename: string;
@@ -76,6 +78,7 @@ const FileLists = () => {
   const [uploadFolder, setUploadFolder] = useState<FileList | null>(null);
   const [currentFolder, setCurrentFolder] = useState("");
   const [currentFiles, setCurrentFiles] = useState({});
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchFiles = async () => {
@@ -109,7 +112,7 @@ const FileLists = () => {
       alert("Choose files");
       return;
     }
-    await upalodMultipleFiles(uploadFiles, username, currentFolder);
+    await uploadMultipleFiles(uploadFiles, username, currentFolder);
     const data = await getFiles(username);
     setFiles(generateTree(data));
   };
@@ -119,14 +122,20 @@ const FileLists = () => {
       alert("Choose folder");
       return;
     }
-    await upalodFolder(uploadFolder, username, currentFolder);
+    await uploadFolders(uploadFolder, username, currentFolder);
     const data = await getFiles(username);
     setFiles(generateTree(data));
   };
 
   const onClickItem = (key: string) => {
+    console.log("clickItem");
+    const id = currentFiles[key]?.file?.id;
     if (key.indexOf(".") === -1) {
       setCurrentFolder((prev) => `${prev}${key}/`);
+    }
+
+    if (id) {
+      navigate(`/file/${id}`);
     }
   };
 
