@@ -7,7 +7,7 @@ const fileSchema = new mongoose.Schema({
   user: String,
   size: Number,
   isDeleted: Boolean,
-  deletedAt: Date,
+  deletedAt: Number
 });
 
 export default fileSchema;

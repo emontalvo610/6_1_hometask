@@ -1,23 +1,27 @@
-import { useState, useEffect, ChangeEvent } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { fetchFileContent } from "../api";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
 
-// import { deleteFile, getFile, renameFile } from "../api";
+import { getFile } from "../api";
 
 interface FileDetail {
   filename: string;
   data: any;
-  user: string;
-  size: Number;
 }
 
-const FileDetailPage = () => {
+const FileDetail = () => {
   const { id } = useParams();
   const [file, setFile] = useState<FileDetail>({} as FileDetail);
+  const navigate = useNavigate();
+
+  if (!localStorage.getItem("user")) {
+    alert("User is not authorized.");
+    navigate("/");
+    return;
+  }
+
   useEffect(() => {
     const fetchFile = async () => {
-      const data = await fetchFileContent(id ?? "");
-      console.log({ data });
+      const data = await getFile(id ?? "");
       setFile(data);
     };
     fetchFile();
@@ -38,6 +42,9 @@ const FileDetailPage = () => {
   return (
     <div>
       <div>{file.filename}</div>
+      <div>
+        <Link to="/filelist">Back</Link>
+      </div>
       {file.filename && file?.filename.slice(-3) === "txt" && (
         <div>{getTextContent()}</div>
       )}
@@ -48,4 +55,4 @@ const FileDetailPage = () => {
   );
 };
 
-export default FileDetailPage;
+export default FileDetail;
