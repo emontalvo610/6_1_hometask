@@ -1,18 +1,22 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+
 import Login from "./components/Login";
-import FileLists from "./components/FileLists";
-import FileDetailPage from "./components/FileDetailPage";
+import FileList from "./components/FileList";
+import RecycleBin from "./components/RecycleBin";
+import FileDetail from "./components/FileDetail";
+
+import "./App.css";
 
 function App() {
   return (
-    <Router>
+    <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
-        <Route path="/files" element={<FileLists />} />
-        <Route path="/file/:id" element={<FileDetailPage />} />
+        <Route path="/filelist" element={<FileList />} />
+        <Route path="/recyclebin" element={<RecycleBin />} />
+        <Route path="/filedetail/:id" element={<FileDetail />} />
       </Routes>
-    </Router>
+    </BrowserRouter>
   );
 }
 

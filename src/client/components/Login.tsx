@@ -24,7 +24,8 @@ const Login = () => {
       }
       await login(username, password);
       localStorage.setItem("user", username);
-      navigate("/files");
+      localStorage.setItem("currentFolder", "");
+      navigate("/filelist");
     } catch (error) {
       alert("Login failed");
       setUsername("");
