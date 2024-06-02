@@ -4,6 +4,7 @@ import multer from "multer";
 import userSchema from "../schemas/userSchema";
 import fileSchema from "../schemas/fileSchema";
 import mongoose from "mongoose";
+const cron = require("node-cron");
 
 import { DELETE_LIMIT } from "../constant";
 
@@ -11,13 +12,32 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage });
 const router = Router();
 
+// Schedule the cron job to run every minute
+cron.schedule("* * * * *", async () => {
+  try {
+    // Find files that have exceeded the DELETE_LIMIT
+    const expiredFiles = await FileModel.find({
+      isDeleted: true,
+      deletedAt: { $lte: Date.now() - DELETE_LIMIT },
+    });
+
+    // Delete the expired files from the database
+    await FileModel.deleteMany({
+      _id: { $in: expiredFiles.map((file) => file._id) },
+    });
+
+    console.log(`Deleted ${expiredFiles.length} expired files.`);
+  } catch (error) {
+    console.error("Error deleting expired files:", error);
+  }
+});
+
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "Connection error:"));
 db.once("open", () => console.log("Connected to MongoDB"));
 
 const UserModel = db.model("user", userSchema);
 const FileModel = db.model("file", fileSchema);
-const cron = require("node-cron");
 
 router.post("/login", async (req: Request, res: Response) => {
   const { username, password } = req.body;
@@ -163,26 +183,6 @@ router.post("/folder/restore", async (req: Request, res: Response) => {
     }
   }
   res.send("Restore the folder successfully");
-});
-
-// Schedule the cron job to run every minute
-cron.schedule("* * * * *", async () => {
-  try {
-    // Find files that have exceeded the DELETE_LIMIT
-    const expiredFiles = await FileModel.find({
-      isDeleted: true,
-      deletedAt: { $lte: Date.now() - DELETE_LIMIT },
-    });
-
-    // Delete the expired files from the database
-    await FileModel.deleteMany({
-      _id: { $in: expiredFiles.map((file) => file._id) },
-    });
-
-    console.log(`Deleted ${expiredFiles.length} expired files.`);
-  } catch (error) {
-    console.error("Error deleting expired files:", error);
-  }
 });
 
 router.post("/deletedfiles", async (req: Request, res: Response) => {
