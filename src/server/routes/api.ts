@@ -17,6 +17,7 @@ db.once("open", () => console.log("Connected to MongoDB"));
 
 const UserModel = db.model("user", userSchema);
 const FileModel = db.model("file", fileSchema);
+const cron = require("node-cron");
 
 router.post("/login", async (req: Request, res: Response) => {
   const { username, password } = req.body;
@@ -164,28 +165,35 @@ router.post("/folder/restore", async (req: Request, res: Response) => {
   res.send("Restore the folder successfully");
 });
 
+// Schedule the cron job to run every minute
+cron.schedule("* * * * *", async () => {
+  try {
+    // Find files that have exceeded the DELETE_LIMIT
+    const expiredFiles = await FileModel.find({
+      isDeleted: true,
+      deletedAt: { $lte: Date.now() - DELETE_LIMIT },
+    });
+
+    // Delete the expired files from the database
+    await FileModel.deleteMany({
+      _id: { $in: expiredFiles.map((file) => file._id) },
+    });
+
+    console.log(`Deleted ${expiredFiles.length} expired files.`);
+  } catch (error) {
+    console.error("Error deleting expired files:", error);
+  }
+});
+
 router.post("/deletedfiles", async (req: Request, res: Response) => {
   const { user } = req.body;
   const files = await FileModel.find({ user });
   if (!files.length) {
     res.json([]);
     return;
+  } else {
+    res.json(files);
   }
-
-  res.json(
-    files
-      .filter(
-        (file) =>
-          file.isDeleted === true &&
-          Date.now() - (file.deletedAt ?? 0) < DELETE_LIMIT
-      )
-      .map((file) => ({
-        filename: file.filename,
-        size: file.size,
-        id: file.id,
-        path: file.path,
-      }))
-  );
 });
 
 router.post("/file/compress/:id", async (req: Request, res: Response) => {
@@ -235,7 +243,7 @@ router.post("/folder/compress", async (req: Request, res: Response) => {
     path: parent + folderName + ".zip",
   });
   await newFile.save();
-  res.send("Compress the file successfully");
+  res.send({ message: "Compress the file successfully" });
 });
 
 router.get("/file/download/:id", async (req, res) => {
@@ -292,7 +300,7 @@ router.post("/file/rename/:id", async (req: Request, res: Response) => {
     file.path = parent + newname;
     await file.save();
   }
-  res.send("Rename the file successfully");
+  res.send({ message: "Rename the file successfully" });
 });
 
 router.post("/folder/rename", async (req: Request, res: Response) => {
@@ -311,7 +319,7 @@ router.post("/folder/rename", async (req: Request, res: Response) => {
       await files[i].save();
     }
   }
-  res.send("Rename the fodler successfully");
+  res.send({ message: "Rename the fodler successfully" });
 });
 
 export default router;
